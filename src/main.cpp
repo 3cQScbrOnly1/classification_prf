@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
 	vector<string> gold_labels;
 	while(getline(gold_file, gold_line))
 	{
-		split(fields, gold_line, is_any_of("\t"));
+		split(fields, gold_line, is_any_of(" "));
 		gold_label_table[fields[0]]++;
 		gold_labels.push_back(fields[0]);
 	}
@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
 		predict_labels.clear();
 		while(getline(predict_file, predict_line))
 		{
-			split(fields, predict_line, is_any_of("\t"));
+			split(fields, predict_line, is_any_of(" "));
 			predict_labels.push_back(fields[0]);
 		}
 		if(predict_labels.size() == gold_labels.size())
@@ -91,28 +91,43 @@ int main(int argc, char* argv[])
 			} //for
 			// compute prf
 			pos = 0;
-			cout << "================================================================================" << endl;
+			cout.precision(5);
+			cout << endl;
 			cout << "file: " << argv[i] << endl;
+			cout << "type" << "\t" << "precision" << "\t" << "recalls" << "\t"  << "f score" << endl;
+			double predict_right_sum = 0, predict_sum = 0, gold_sum = 0;
 			for(map<string, int>::iterator it = gold_label_table.begin();
 					it != gold_label_table.end(); it++)
 			{
+				predict_right_sum += predict_right[pos];
+				predict_sum += predict_num[pos];
+				gold_sum += it->second;
 				precisions[pos] = (double) predict_right[pos] / predict_num[pos];
 				recalls[pos] = (double) predict_right[pos] / it->second;
 				fs[pos] = 2 * precisions[pos] * recalls[pos] / (precisions[pos] + recalls[pos]);
-				cout << "label: " << it->first << "\t";
-				cout << "precision: " << precisions[pos] << "\t";
-				cout << "recalls: " << recalls[pos] << "\t";
-				cout << "f score: " << fs[pos] << endl;
-				cout << "-------------------------------------------------------------------" << endl;
+				cout << "label_" << it->first << "\t";
+				cout << precisions[pos] << "\t";
+				cout << recalls[pos] << "\t";
+				cout << fs[pos] << endl;
 				pos++;
 			}
-			double f_avg = 0;
+			double micro_precision = predict_right_sum / predict_sum;
+			double micro_recall = predict_right_sum / gold_sum;
+			double micro_f = 2 * micro_precision * micro_recall / (micro_precision + micro_recall);
+			cout << "micro" << "\t" << micro_precision << "\t";
+			cout << micro_recall << "\t";
+			cout << micro_f << endl;
+			double f_sum = 0, p_sum = 0, r_sum = 0;
 			for(int idx = 0; idx < g_table_size; idx++)
 			{
-				f_avg += fs[idx];
+				p_sum += precisions[idx];
+				r_sum += recalls[idx];
+				f_sum += fs[idx];
 			}
-			cout << "f avg: " << f_avg / g_table_size << endl;
-			cout << "================================================================================" << endl;
+			cout << "macro" << "\t" <<  p_sum / g_table_size << "\t";
+			cout << r_sum / g_table_size << "\t";
+			cout << f_sum / g_table_size << endl;
+			cout << endl;
 		} //if
 		else
 			cout << "error file" << endl;
