@@ -7,25 +7,22 @@
 using namespace std;
 using namespace boost;
 
+void getLabels(const char* path, vector<string>& labels);
+
 int main(int argc, char* argv[])
 {
-	ifstream gold_file(argv[1]), predict_file;
 	map<string, int> gold_label_table;
-	string gold_line;
-	vector<string> fields;
 	vector<string> gold_labels;
-	while(getline(gold_file, gold_line))
+	getLabels(argv[1], gold_labels);
+	for(int i = 0;  i < gold_labels.size(); i++)
 	{
-		split(fields, gold_line, is_any_of(" "));
-		gold_label_table[fields[0]]++;
-		gold_labels.push_back(fields[0]);
+		gold_label_table[gold_labels[i]]++;
 	}
 	for(map<string, int>::iterator it = gold_label_table.begin();
 		it != gold_label_table.end(); it++)
 	{
 		cout << "gold label " << it->first << " num: " << it->second << endl;
 	}
-	gold_file.close();
 	string predict_line;
 	vector<string> predict_labels;
 	int g_table_size = gold_label_table.size();
@@ -37,13 +34,8 @@ int main(int argc, char* argv[])
 	int pos;
 	for(int i = 2; i < argc; i++)
 	{
-		predict_file.open(argv[i]);
 		predict_labels.clear();
-		while(getline(predict_file, predict_line))
-		{
-			split(fields, predict_line, is_any_of(" "));
-			predict_labels.push_back(fields[0]);
-		}
+		getLabels(argv[i], predict_labels);
 		if(predict_labels.size() == gold_labels.size())
 		{
 
@@ -131,7 +123,21 @@ int main(int argc, char* argv[])
 		} //if
 		else
 			cout << "error file" << endl;
-		predict_file.close();
+		//predict_file.close();
 	}
 	return 0;
+}
+
+void getLabels(const char* path, vector<string>& labels)
+{
+	labels.clear();
+	ifstream file(path);
+	string line;
+	vector<string> fields;
+	while(getline(file, line))
+	{
+		split(fields, line, is_any_of(" "));
+		labels.push_back(fields[0]);	
+	}
+	file.close();
 }
