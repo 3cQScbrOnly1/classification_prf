@@ -2,12 +2,11 @@
 #include <fstream>
 #include <vector>
 #include <map>
-#include <boost/algorithm/string.hpp>
 
 using namespace std;
-using namespace boost;
 
 void getLabels(const char* path, vector<string>& labels);
+void split_bychars(const string& str, vector<string> & vec, const char *sep);
 
 int main(int argc, char* argv[])
 {
@@ -123,9 +122,24 @@ int main(int argc, char* argv[])
 		} //if
 		else
 			cout << "error file" << endl;
-		//predict_file.close();
 	}
 	return 0;
+}
+
+void split_bychars(const string& str, vector<string> & vec, const char *sep = " ") 
+{ //assert(vec.empty());
+	vec.clear();
+	string::size_type pos1 = 0, pos2 = 0;
+	string word;
+	while ((pos2 = str.find_first_of(sep, pos1)) != string::npos) {
+		word = str.substr(pos1, pos2 - pos1);
+		pos1 = pos2 + 1;
+		if (!word.empty())
+			vec.push_back(word);
+	}
+	word = str.substr(pos1);
+	if (!word.empty())
+		vec.push_back(word);
 }
 
 void getLabels(const char* path, vector<string>& labels)
@@ -136,7 +150,7 @@ void getLabels(const char* path, vector<string>& labels)
 	vector<string> fields;
 	while(getline(file, line))
 	{
-		split(fields, line, is_any_of(" "));
+		split_bychars(line, fields, "\t");
 		labels.push_back(fields[0]);	
 	}
 	file.close();
